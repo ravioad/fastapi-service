@@ -1,0 +1,17 @@
+# Byte-compiled files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual environment folders
+venv/
+.env/
+
+# Environment variables
+*.env
+
+# Python cache and logs
+*.log
+*.sqlite3
+*.pyc
+.DS_Store
