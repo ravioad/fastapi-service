@@ -2,16 +2,19 @@
 FROM python:3.10-slim
 
 # Step 2: Set the working directory inside the container
-WORKDIR /app
+WORKDIR /code
 
 # Step 3: Copy requirements.txt into the container
-COPY requirements.txt .
+COPY requirements.txt /code/requirements.txt
 
 # Step 4: Install dependencies
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Step 5: Copy the application code into the container
-COPY . .
+COPY . /code/app
+
+# Set PYTHONPATH
+ENV PYTHONPATH=/code
 
 # Step 6: Expose the application port
 EXPOSE 8000
