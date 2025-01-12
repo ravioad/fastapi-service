@@ -9,37 +9,83 @@ on:
       - ".github/workflows/backend-deployment.yml"
 
 jobs:
-  build-and-push:
-    name: Build and Push Docker Image
+  deploy:
     runs-on: ubuntu-latest
 
     steps:
-      # Step 1: Checkout the code
-      - name: Checkout code
-        uses: actions/checkout@v3
+    - name: Checkout code
+      uses: actions/checkout@v3
 
-      # Step 2: Configure AWS credentials
-      - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v2
-        with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: ${{ secrets.AWS_REGION }}
+    - name: Log in to Amazon ECR
+      uses: aws-actions/amazon-ecr-login@v1
 
-      # Step 3: Login to Amazon ECR
-      - name: Login to Amazon ECR
-        uses: aws-actions/amazon-ecr-login@v1
-        with:
-          region: ${{ secrets.AWS_REGION }}
+    - name: Build, tag, and push Docker image
+      env:
+        ECR_REGISTRY: ${{ secrets.ECR_REGISTRY }}
+        ECR_REPOSITORY: ${{ secrets.ECR_REPOSITORY }}
+      run: |
+        IMAGE_TAG=latest
+        docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
+        docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
 
-      # Step 4: Build and Tag Docker Image
-      - name: Build and Tag Docker Image
-        run: |
-          cd app
-          docker build -t fastapi-service:latest .
-          docker tag fastapi-service:latest ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/fastapi-service:latest
+    - name: Download existing ECS task definition
+      run: |
+        aws ecs describe-task-definition \
+          --task-definition CdkStackFastAPIServiceTaskDef8ED04C43 \
+          --query taskDefinition > task-definition.json
 
-      # Step 5: Push Docker Image to ECR
-      - name: Push Docker Image to ECR
-        run: |
-          docker push ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/fastapi-service:latest
+    - name: Update task definition with new image
+      id: update-task
+      uses: aws-actions/amazon-ecs-render-task-definition@v1
+      with:
+        task-definition: task-definition.json
+        container-name: web
+        image: ${{ secrets.ECR_REGISTRY }}/${{ secrets.ECR_REPOSITORY }}:latest
+
+    - name: Deploy updated task definition to ECS
+      uses: aws-actions/amazon-ecs-deploy-task-definition@v1
+      with:
+        cluster: CdkStack-FastAPICluster85981A8D-nGZM7iues0AT
+        service: CdkStack-FastAPIService91BC898F-l6mAIDIZlOr7
+        task-definition: ${{ steps.update-task.outputs.task-definition }}
+        wait-for-service-stability: true
+
+#jobs:
+#  build-and-push:
+#    name: Build and Push Docker Image
+#    runs-on: ubuntu-latest
+#
+#    steps:
+#      # Step 1: Checkout the code
+#      - name: Checkout code
+#        uses: actions/checkout@v3
+#
+#      # Step 2: Configure AWS credentials
+#      - name: Configure AWS credentials
+#        uses: aws-actions/configure-aws-credentials@v2
+#        with:
+#          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+#          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+#          aws-region: ${{ secrets.AWS_REGION }}
+#
+#      # Step 3: Login to Amazon ECR
+#      - name: Login to Amazon ECR
+#        uses: aws-actions/amazon-ecr-login@v1
+#        with:
+#          region: ${{ secrets.AWS_REGION }}
+#
+#      # Step 4: Build and Tag Docker Image
+#      - name: Build and Tag Docker Image
+#        run: |
+#          cd app
+#          docker build -t fastapi-service:latest .
+#          docker tag fastapi-service:latest ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/fastapi-service:latest
+#
+#      - name: Download task definition
+#        run: |
+#          aws ecs describe-task-definition --task-definition ${{inputs.task_definition_name}} --query taskDefinition > task-definition.json
+#
+#      # Step 5: Push Docker Image to ECR
+#      - name: Push Docker Image to ECR
+#        run: |
+#          docker push ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/fastapi-service:latest

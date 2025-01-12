@@ -35,7 +35,7 @@ class CdkStack(Stack):
                 "image": ecs.ContainerImage.from_ecr_repository(repository, "latest"),
                 "container_port": 8000,  # The port your FastAPI app listens on
             },
-            memory_limit_mib=256,
+            memory_limit_mib=512,
             cpu=256,
             runtime_platform=ecs.RuntimePlatform(
                 operating_system_family=ecs.OperatingSystemFamily.LINUX,
