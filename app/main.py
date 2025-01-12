@@ -7,7 +7,7 @@ app.include_router(api_router, prefix="/api/v1")
 
 @app.get("/")
 async def read_root():
-    return {"message": "Welcome to your FastAPI service!???"}
+    return {"message": "Welcome to OUR FastAPI service!"}
 
 #
 # @app.get("/items/{item_id}")
