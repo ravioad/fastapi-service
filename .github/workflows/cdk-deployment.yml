@@ -15,17 +15,26 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
 
-      # Step 2: Install Dependencies
-      - name: Install Node.js and AWS CDK
+      # Step 2: Configure AWS credentials
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      # Step 3: Install dependencies
+      - name: Install AWS CDK and dependencies
         run: |
           npm install -g aws-cdk
           pip install -r cdk/requirements.txt
 
-      # Step 3: Bootstrap CDK Environment (Optional for first-time deployment)
+      # Step 4: Bootstrap CDK Environment (if not already bootstrapped)
       - name: Bootstrap CDK
-        run: cdk bootstrap aws://${{ secrets.AWS_ACCOUNT_ID }}/${{ secrets.AWS_REGION }}
+        run: |
+          cdk bootstrap aws://${{ secrets.AWS_ACCOUNT_ID }}/${{ secrets.AWS_REGION }}
 
-      # Step 4: Deploy CDK Stack
+      # Step 5: Deploy CDK Stack
       - name: Deploy CDK Stack
         run: |
           cd cdk
