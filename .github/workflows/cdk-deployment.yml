@@ -1,0 +1,32 @@
+name: CDK Deployment
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    name: Deploy CDK Stack
+    runs-on: ubuntu-latest
+
+    steps:
+      # Step 1: Checkout the code
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      # Step 2: Install Dependencies
+      - name: Install Node.js and AWS CDK
+        run: |
+          npm install -g aws-cdk
+          pip install -r cdk/requirements.txt
+
+      # Step 3: Bootstrap CDK Environment (Optional for first-time deployment)
+      - name: Bootstrap CDK
+        run: cdk bootstrap aws://${{ secrets.AWS_ACCOUNT_ID }}/${{ secrets.AWS_REGION }}
+
+      # Step 4: Deploy CDK Stack
+      - name: Deploy CDK Stack
+        run: |
+          cd cdk
+          cdk deploy --require-approval never
