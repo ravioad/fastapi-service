@@ -6,7 +6,7 @@ on:
       - main
     paths:
       - "cdk/**"
-      - ".github/workflows/cdk.yml"
+      - ".github/workflows/cdk-deployment.yml"
 
 jobs:
   deploy:
