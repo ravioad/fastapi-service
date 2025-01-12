@@ -39,7 +39,7 @@ async def update_item(item_id: str, user: UpdateUserModel):
         update_expression.append("#description = :description")
         expression_attribute_names["#description"] = "description"
         expression_attribute_values[":description"] = user.description
-#jhkj
+
     if not update_expression:
         return {"message": "No fields provided for update"}
 
