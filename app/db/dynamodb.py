@@ -4,7 +4,7 @@ from dotenv import load_dotenv
 
 
 def get_dynamodb_client():
-    # Load credentials from environment variables
+    # Load credentials from environment variablesss
     load_dotenv()
     aws_access_key_id = os.getenv("PRACTICE_AWS_ACCESS_KEY_ID")
     aws_secret_access_key = os.getenv("PRACTICE_AWS_SECRET_ACCESS_KEY")
